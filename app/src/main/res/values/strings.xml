@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">YaPro Tree Dumper</string>
+    <string name="accessibility_description">Сервис только читает дерево элементов экрана приложения Яндекс Про и записывает его в текстовый файл для ручного анализа. Сервис не нажимает кнопки, не совершает жесты и не отправляет данные в сеть.</string>
+
+    <string name="service_enabled">Сервис включён</string>
+    <string name="service_disabled">Сервис выключен</string>
+    <string name="open_settings">Открыть настройки спец. возможностей</string>
+
+    <string name="target_package_label">Целевой пакет</string>
+    <string name="dump_enabled">Писать дамп</string>
+
+    <string name="file_info">Файл дампа: %1$s (%2$s)</string>
+    <string name="file_missing">Файл дампа пока не создан: %1$s</string>
+    <string name="share">Поделиться файлом</string>
+    <string name="share_chooser_title">Поделиться дампом</string>
+    <string name="share_no_file">Файл дампа ещё не создан</string>
+    <string name="clear">Очистить файл</string>
+    <string name="clear_title">Очистить файл?</string>
+    <string name="clear_message">Будут удалены текущий и предыдущий файлы дампа.</string>
+    <string name="clear_confirm">Очистить</string>
+
+    <string name="hint">Как включить: нажмите кнопку настроек, найдите «YaPro Tree Dumper» и включите сервис, затем включите переключатель «Писать дамп» и откройте Яндекс Про.\nКак забрать файл: adb pull /sdcard/Android/data/com.example.treedumper/files/tree_dump.txt &lt;папка&gt; или кнопка «Поделиться файлом».</string>
+</resources>
