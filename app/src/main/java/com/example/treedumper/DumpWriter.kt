@@ -68,7 +68,7 @@ class DumpWriter private constructor(context: Context) {
         private const val FILE_NAME = "tree_dump.txt"
         private const val OLD_FILE_NAME = "tree_dump.old.txt"
         private const val THREAD_NAME = "tree-dump-writer"
-        private const val MAX_FILE_SIZE = 5L * 1024L * 1024L
+        private const val MAX_FILE_SIZE = 25L * 1024L * 1024L
 
         @Volatile
         private var instance: DumpWriter? = null
