@@ -1,8 +1,13 @@
 package com.example.treedumper
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -13,6 +18,7 @@ class DumpWriter private constructor(context: Context) {
     private val oldFile = File(currentFile.parentFile, OLD_FILE_NAME)
     private val executor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, THREAD_NAME) }
     private val lock = Any()
+    private val screenshotTimeFormat = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
 
     fun getFile(): File = currentFile
 
@@ -26,6 +32,32 @@ class DumpWriter private constructor(context: Context) {
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to write dump", e)
+            }
+        }
+    }
+
+    fun enqueueScreenshot(bitmap: Bitmap) {
+        executor.execute {
+            try {
+                val directory = File(currentFile.parentFile, SCREENSHOT_DIR)
+                if (!directory.exists() && !directory.mkdirs()) {
+                    Log.w(TAG, "Failed to create screenshots directory")
+                    return@execute
+                }
+                val name = "screenshot_" + screenshotTimeFormat.format(Date()) + ".png"
+                FileOutputStream(File(directory, name)).use { stream ->
+                    if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+                        Log.w(TAG, "Failed to compress screenshot")
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to save screenshot", e)
+            } finally {
+                try {
+                    bitmap.recycle()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to recycle screenshot bitmap", e)
+                }
             }
         }
     }
@@ -68,6 +100,7 @@ class DumpWriter private constructor(context: Context) {
         private const val FILE_NAME = "tree_dump.txt"
         private const val OLD_FILE_NAME = "tree_dump.old.txt"
         private const val THREAD_NAME = "tree-dump-writer"
+        private const val SCREENSHOT_DIR = "screenshots"
         private const val MAX_FILE_SIZE = 25L * 1024L * 1024L
 
         @Volatile

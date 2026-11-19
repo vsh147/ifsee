@@ -55,6 +55,22 @@
             android:inputType="text"
             android:singleLine="true" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/screenshot_interval_label"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+        <EditText
+            android:id="@+id/screenshotIntervalEdit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/screenshot_interval_hint"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:singleLine="true" />
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/dumpSwitch"
             android:layout_width="match_parent"

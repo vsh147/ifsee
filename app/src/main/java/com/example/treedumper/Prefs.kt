@@ -24,12 +24,20 @@ class Prefs(context: Context) {
             prefs.edit().putString(KEY_LOG_FILTER, value).apply()
         }
 
+    var screenshotIntervalSeconds: Int
+        get() = prefs.getInt(KEY_SCREENSHOT_INTERVAL_SECONDS, DEFAULT_SCREENSHOT_INTERVAL_SECONDS)
+        set(value) {
+            prefs.edit().putInt(KEY_SCREENSHOT_INTERVAL_SECONDS, value.coerceAtLeast(1)).apply()
+        }
+
     private companion object {
         const val PREFS_NAME = "treedumper_prefs"
         const val KEY_TARGET_PACKAGE = "target_package"
         const val KEY_DUMP_ENABLED = "dump_enabled"
         const val KEY_LOG_FILTER = "log_filter"
+        const val KEY_SCREENSHOT_INTERVAL_SECONDS = "screenshot_interval_seconds"
         const val DEFAULT_TARGET_PACKAGE = "ru.yandex.taximeter"
         const val DEFAULT_LOG_FILTER = "Принять"
+        const val DEFAULT_SCREENSHOT_INTERVAL_SECONDS = 10
     }
 }

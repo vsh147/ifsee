@@ -1,8 +1,13 @@
 package com.example.treedumper
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityService.ScreenshotResult
+import android.accessibilityservice.AccessibilityService.TakeScreenshotCallback
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
+import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.SimpleDateFormat
@@ -16,6 +21,7 @@ class DumpService : AccessibilityService() {
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
     private var lastDumpAt = 0L
+    private var lastScreenshotAt = 0L
     private var lastHash: Int? = null
 
     override fun onCreate() {
@@ -48,6 +54,8 @@ class DumpService : AccessibilityService() {
                 }
             }
             if (tree.isEmpty()) return
+
+            requestScreenshotIfAllowed()
 
             val text = tree.toString()
             val hash = text.hashCode()
@@ -94,6 +102,44 @@ class DumpService : AccessibilityService() {
                 Log.w(TAG, "Failed to get active root package", e)
                 false
             }
+        }
+    }
+
+    private fun requestScreenshotIfAllowed() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+
+        val now = SystemClock.elapsedRealtime()
+        val intervalMs = prefs.screenshotIntervalSeconds * 1000L
+        if (now - lastScreenshotAt < intervalMs) return
+        lastScreenshotAt = now
+
+        takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, screenshotCallback)
+    }
+
+    private val screenshotCallback = object : TakeScreenshotCallback {
+        override fun onSuccess(result: ScreenshotResult) {
+            try {
+                val hardwareBitmap = Bitmap.wrapHardwareBuffer(result.hardwareBuffer, result.colorSpace)
+                if (hardwareBitmap == null) {
+                    Log.w(TAG, "Failed to wrap screenshot hardware buffer")
+                    return
+                }
+                try {
+                    writer.enqueueScreenshot(hardwareBitmap.copy(Bitmap.Config.ARGB_8888, false))
+                } finally {
+                    hardwareBitmap.recycle()
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to handle screenshot result", e)
+            } finally {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    result.hardwareBuffer.close()
+                }
+            }
+        }
+
+        override fun onFailure(errorCode: Int) {
+            Log.w(TAG, "Screenshot failed with error $errorCode")
         }
     }
 

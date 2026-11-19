@@ -35,6 +35,14 @@ class MainActivity : AppCompatActivity() {
             prefs.logFilter = text?.toString()?.trim().orEmpty()
         }
 
+        binding.screenshotIntervalEdit.setText(prefs.screenshotIntervalSeconds.toString())
+        binding.screenshotIntervalEdit.doAfterTextChanged { text ->
+            val seconds = text?.toString()?.trim()?.toIntOrNull()
+            if (seconds != null && seconds > 0) {
+                prefs.screenshotIntervalSeconds = seconds
+            }
+        }
+
         binding.dumpSwitch.isChecked = prefs.dumpEnabled
         binding.dumpSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.dumpEnabled = isChecked
