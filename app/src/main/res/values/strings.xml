@@ -8,6 +8,8 @@
     <string name="open_settings">Открыть настройки спец. возможностей</string>
 
     <string name="target_package_label">Целевой пакет</string>
+    <string name="filter_label">Фильтр</string>
+    <string name="filter_hint">Принять</string>
     <string name="dump_enabled">Писать дамп</string>
 
     <string name="file_info">Файл дампа: %1$s (%2$s)</string>

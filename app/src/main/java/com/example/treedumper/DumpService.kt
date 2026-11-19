@@ -38,10 +38,11 @@ class DumpService : AccessibilityService() {
             val roots = collectRoots(targetPackage)
             if (roots.isEmpty()) return
 
+            val filter = prefs.logFilter
             val tree = StringBuilder()
             for (root in roots) {
                 try {
-                    tree.append(TreeDumper.dumpTree(root))
+                    tree.append(TreeDumper.dumpTree(root, filter))
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to dump a window", e)
                 }

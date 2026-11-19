@@ -10,39 +10,56 @@ object TreeDumper {
     private const val MAX_DEPTH = 40
     private const val INDENT = "  "
 
-    fun dumpTree(root: AccessibilityNodeInfo): String {
+    fun dumpTree(root: AccessibilityNodeInfo, filter: String): String {
         val out = StringBuilder()
-        appendNode(root, 0, out)
+        appendNode(root, 0, out, filter.trim())
         return out.toString()
     }
 
-    private fun appendNode(node: AccessibilityNodeInfo, depth: Int, out: StringBuilder) {
+    private fun appendNode(node: AccessibilityNodeInfo, depth: Int, out: StringBuilder, filter: String) {
         if (depth > MAX_DEPTH) return
 
-        try {
-            val className = node.className?.toString().asNodeValue() ?: NULL_VALUE
-            val text = node.text?.toString().asNodeValue() ?: NULL_VALUE
-            val description = node.contentDescription?.toString().asNodeValue() ?: NULL_VALUE
-            val viewId = node.viewIdResourceName.asNodeValue() ?: NULL_VALUE
-            val bounds = Rect()
-            node.getBoundsInScreen(bounds)
-
-            out.append(INDENT.repeat(depth))
-                .append('<').append(className).append('>')
-                .append(" text=\"").append(text).append('"')
-                .append(" desc=\"").append(description).append('"')
-                .append(" id=").append(viewId)
-                .append(" bounds=[")
-                .append(bounds.left).append(',')
-                .append(bounds.top).append(',')
-                .append(bounds.right).append(',')
-                .append(bounds.bottom).append(']')
-                .append(" click=").append(node.isClickable)
-                .append(" enabled=").append(node.isEnabled)
-                .append('\n')
+        val text = try {
+            node.text?.toString().orEmpty()
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to format node", e)
-            return
+            Log.w(TAG, "Failed to read text", e)
+            ""
+        }
+        val description = try {
+            node.contentDescription?.toString().orEmpty()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to read content description", e)
+            ""
+        }
+
+        val matches = filter.isEmpty() ||
+            text.contains(filter, ignoreCase = true) ||
+            description.contains(filter, ignoreCase = true)
+
+        if (matches) {
+            try {
+                val className = node.className?.toString().asNodeValue() ?: NULL_VALUE
+                val viewId = node.viewIdResourceName.asNodeValue() ?: NULL_VALUE
+                val bounds = Rect()
+                node.getBoundsInScreen(bounds)
+
+                out.append(INDENT.repeat(depth))
+                    .append('<').append(className).append('>')
+                    .append(" text=\"").append(text.asNodeValue() ?: NULL_VALUE).append('"')
+                    .append(" desc=\"").append(description.asNodeValue() ?: NULL_VALUE).append('"')
+                    .append(" id=").append(viewId)
+                    .append(" bounds=[")
+                    .append(bounds.left).append(',')
+                    .append(bounds.top).append(',')
+                    .append(bounds.right).append(',')
+                    .append(bounds.bottom).append(']')
+                    .append(" click=").append(node.isClickable)
+                    .append(" enabled=").append(node.isEnabled)
+                    .append('\n')
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to format node", e)
+                return
+            }
         }
 
         val childCount = try {
@@ -61,7 +78,7 @@ object TreeDumper {
             } ?: continue
 
             try {
-                appendNode(child, depth + 1, out)
+                appendNode(child, depth + 1, out, filter)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to traverse child at $index", e)
             }

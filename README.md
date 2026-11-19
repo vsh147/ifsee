@@ -13,6 +13,9 @@
   `ru.yandex.taximeter`).
 - Не пишет одинаковые подряд экраны и ограничивает частоту дампов — не чаще
   одного блока в 500 мс.
+- Фильтрует узлы по `text`/`contentDescription`: в файл попадают только узлы,
+  содержащие строку из поля «Фильтр» (по умолчанию «Принять», без учёта регистра).
+  Пустые блоки не создаются.
 - Ротирует файл при размере больше 25 МБ: текущий файл становится
   `tree_dump.old.txt`, создаётся новый `tree_dump.txt`.
 - Позволяет очистить файл и поделиться им через `FileProvider`.
@@ -54,13 +57,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 1. Откройте приложение YaPro Tree Dumper.
 2. Нажмите «Открыть настройки спец. возможностей».
 3. Найдите **YaPro Tree Dumper** и включите сервис.
-4. Вернитесь в приложение и включите переключатель «Писать дамп».
+4. Вернитесь в приложение, при необходимости измените поле «Фильтр» и включите
+   переключатель «Писать дамп».
 5. Откройте Яндекс Про и посмотрите текст дампа — в файле появятся блоки:
 
 ```text
 ===== 12:34:56.789 STATE_CHANGED pkg=ru.yandex.taximeter windows=1
-<android.widget.FrameLayout> text="null" desc="null" id=null bounds=[0,0,1080,2400] click=false enabled=true
-  <android.widget.TextView> text="Новый заказ" desc="null" id=ru.yandex.taximeter:id/order_title bounds=[32,120,600,180] click=false enabled=true
+    <android.widget.Button> text="Принять" desc="null" id=ru.yandex.taximeter:id/accept_order bounds=[64,900,1016,1000] click=true enabled=true
 
 ```
 

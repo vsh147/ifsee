@@ -30,6 +30,11 @@ class MainActivity : AppCompatActivity() {
             prefs.targetPackage = text?.toString()?.trim().orEmpty()
         }
 
+        binding.filterEdit.setText(prefs.logFilter)
+        binding.filterEdit.doAfterTextChanged { text ->
+            prefs.logFilter = text?.toString()?.trim().orEmpty()
+        }
+
         binding.dumpSwitch.isChecked = prefs.dumpEnabled
         binding.dumpSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.dumpEnabled = isChecked
