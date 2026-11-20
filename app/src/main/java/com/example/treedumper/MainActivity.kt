@@ -44,6 +44,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        binding.screenshotDelayEdit.setText(prefs.screenshotDelaySeconds.toString())
+        binding.screenshotDelayEdit.doAfterTextChanged { text ->
+            val seconds = text?.toString()?.trim()?.toIntOrNull()
+            if (seconds != null && seconds >= 0) {
+                prefs.screenshotDelaySeconds = seconds
+            }
+        }
+
         binding.dumpSwitch.isChecked = prefs.dumpEnabled
         binding.dumpSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.dumpEnabled = isChecked

@@ -5,6 +5,8 @@ import android.accessibilityservice.AccessibilityService.ScreenshotResult
 import android.accessibilityservice.AccessibilityService.TakeScreenshotCallback
 import android.graphics.Bitmap
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.Display
@@ -19,9 +21,11 @@ class DumpService : AccessibilityService() {
     private lateinit var prefs: Prefs
     private val writer by lazy { DumpWriter.get(this) }
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    private val screenshotHandler = Handler(Looper.getMainLooper())
 
     private var lastDumpAt = 0L
     private var lastScreenshotAt = 0L
+    private var screenshotPending = false
     private var lastHash: Int? = null
 
     override fun onCreate() {
@@ -107,13 +111,18 @@ class DumpService : AccessibilityService() {
 
     private fun requestScreenshotIfAllowed() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
+        if (screenshotPending) return
 
         val now = SystemClock.elapsedRealtime()
         val intervalMs = prefs.screenshotIntervalSeconds * 1000L
         if (now - lastScreenshotAt < intervalMs) return
         lastScreenshotAt = now
+        screenshotPending = true
 
-        takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, screenshotCallback)
+        screenshotHandler.postDelayed({
+            screenshotPending = false
+            takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, screenshotCallback)
+        }, prefs.screenshotDelaySeconds * 1000L)
     }
 
     private val screenshotCallback = object : TakeScreenshotCallback {
@@ -156,6 +165,11 @@ class DumpService : AccessibilityService() {
 
     override fun onInterrupt() {
         // Nothing to interrupt: the service only reads the tree.
+    }
+
+    override fun onDestroy() {
+        screenshotHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
     }
 
     private companion object {

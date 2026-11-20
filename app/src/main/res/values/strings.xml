@@ -12,6 +12,8 @@
     <string name="filter_hint">Принять</string>
     <string name="screenshot_interval_label">Интервал скриншота, сек</string>
     <string name="screenshot_interval_hint">10</string>
+    <string name="screenshot_delay_label">Задержка скриншота, сек</string>
+    <string name="screenshot_delay_hint">3</string>
     <string name="dump_enabled">Писать дамп</string>
 
     <string name="file_info">Файл дампа: %1$s (%2$s)</string>
