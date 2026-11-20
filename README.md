@@ -13,9 +13,9 @@
   `ru.yandex.taximeter`).
 - Не пишет одинаковые подряд экраны и ограничивает частоту дампов — не чаще
   одного блока в 500 мс.
-- Фильтрует узлы по `text`/`contentDescription`: в файл попадают только узлы,
-  содержащие строку из поля «Фильтр» (по умолчанию «Принять», без учёта регистра).
-  Пустые блоки не создаются.
+- Проверяет дерево по `text`/`contentDescription`: если хотя бы один узел содержит
+  строку из поля «Фильтр» (по умолчанию «Принять», без учёта регистра), в файл
+  попадает всё дерево целиком. Если совпадений нет — блок не создаётся.
 - При событии, попадающем под фильтр, сохраняет скриншот экрана в PNG. Интервал
   задаётся полем «Интервал скриншота, сек» (по умолчанию 10 секунд). Скриншоты
   работают на Android 14+ (используется API `takeScreenshot`).
@@ -66,7 +66,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ```text
 ===== 12:34:56.789 STATE_CHANGED pkg=ru.yandex.taximeter windows=1
-    <android.widget.Button> text="Принять" desc="null" id=ru.yandex.taximeter:id/accept_order bounds=[64,900,1016,1000] click=true enabled=true
+<android.widget.FrameLayout> text="null" desc="null" id=null bounds=[0,0,1080,2400] click=false enabled=true
+  <android.widget.TextView> text="Новый заказ" desc="null" id=ru.yandex.taximeter:id/order_title bounds=[32,120,600,180] click=false enabled=true
+  <android.widget.Button> text="Принять" desc="null" id=ru.yandex.taximeter:id/accept_order bounds=[64,900,1016,1000] click=true enabled=true
 
 ```
 
