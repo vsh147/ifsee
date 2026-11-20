@@ -118,23 +118,27 @@ class DumpService : AccessibilityService() {
 
     private val screenshotCallback = object : TakeScreenshotCallback {
         override fun onSuccess(result: ScreenshotResult) {
+            var copy: Bitmap? = null
             try {
                 val hardwareBitmap = Bitmap.wrapHardwareBuffer(result.hardwareBuffer, result.colorSpace)
-                if (hardwareBitmap == null) {
-                    Log.w(TAG, "Failed to wrap screenshot hardware buffer")
-                    return
-                }
-                try {
-                    writer.enqueueScreenshot(hardwareBitmap.copy(Bitmap.Config.ARGB_8888, false))
-                } finally {
-                    hardwareBitmap.recycle()
+                copy = hardwareBitmap?.copy(Bitmap.Config.ARGB_8888, false)
+                hardwareBitmap?.recycle()
+                if (copy == null) {
+                    Log.w(TAG, "Failed to copy screenshot hardware buffer")
                 }
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to handle screenshot result", e)
+                Log.w(TAG, "Failed to copy screenshot hardware buffer", e)
             } finally {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    result.hardwareBuffer.close()
+                    try {
+                        result.hardwareBuffer.close()
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to close screenshot hardware buffer", e)
+                    }
                 }
+            }
+            if (copy != null) {
+                writer.enqueueScreenshot(copy)
             }
         }
 

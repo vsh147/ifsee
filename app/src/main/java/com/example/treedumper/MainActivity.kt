@@ -3,6 +3,7 @@ package com.example.treedumper
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.Settings
 import android.text.format.Formatter
 import android.widget.Toast
@@ -54,6 +55,11 @@ class MainActivity : AppCompatActivity() {
 
         binding.shareButton.setOnClickListener { shareDump() }
         binding.clearButton.setOnClickListener { confirmClear() }
+        binding.galleryButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            startActivity(intent)
+        }
     }
 
     override fun onResume() {

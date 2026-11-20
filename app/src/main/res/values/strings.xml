@@ -23,6 +23,7 @@
     <string name="clear_title">Очистить файл?</string>
     <string name="clear_message">Будут удалены текущий и предыдущий файлы дампа.</string>
     <string name="clear_confirm">Очистить</string>
+    <string name="open_gallery">Открыть галерею</string>
 
     <string name="hint">Как включить: нажмите кнопку настроек, найдите «YaPro Tree Dumper» и включите сервис, затем включите переключатель «Писать дамп» и откройте Яндекс Про.\nКак забрать файл: adb pull /sdcard/Android/data/com.example.treedumper/files/tree_dump.txt &lt;папка&gt; или кнопка «Поделиться файлом».</string>
 </resources>
