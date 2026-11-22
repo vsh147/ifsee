@@ -5,64 +5,53 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.MediaStore
 import android.provider.Settings
-import android.text.format.Formatter
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.FileProvider
-import androidx.core.widget.doAfterTextChanged
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.treedumper.databinding.ActivityMainBinding
+import com.example.treedumper.model.Rule
+import com.example.treedumper.model.RulesJson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var prefs: Prefs
-    private val writer by lazy { DumpWriter.get(this) }
+    private lateinit var repository: RulesRepository
+    private lateinit var adapter: RulesAdapter
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val json = RulesJson.json
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        prefs = Prefs(this)
+        repository = RulesRepository(this)
+        adapter = RulesAdapter(
+            onEnabledChange = { rule, enabled ->
+                scope.launch { repository.upsert(rule.copy(enabled = enabled)) }
+            },
+            onEdit = { openRule(it) },
+            onDelete = { confirmDelete(it) }
+        )
+        binding.rulesRecycler.layoutManager = LinearLayoutManager(this)
+        binding.rulesRecycler.adapter = adapter
 
-        binding.targetPackageEdit.setText(prefs.targetPackage)
-        binding.targetPackageEdit.doAfterTextChanged { text ->
-            prefs.targetPackage = text?.toString()?.trim().orEmpty()
-        }
-
-        binding.filterEdit.setText(prefs.logFilter)
-        binding.filterEdit.doAfterTextChanged { text ->
-            prefs.logFilter = text?.toString()?.trim().orEmpty()
-        }
-
-        binding.screenshotIntervalEdit.setText(prefs.screenshotIntervalSeconds.toString())
-        binding.screenshotIntervalEdit.doAfterTextChanged { text ->
-            val seconds = text?.toString()?.trim()?.toIntOrNull()
-            if (seconds != null && seconds > 0) {
-                prefs.screenshotIntervalSeconds = seconds
-            }
-        }
-
-        binding.screenshotDelayEdit.setText(prefs.screenshotDelaySeconds.toString())
-        binding.screenshotDelayEdit.doAfterTextChanged { text ->
-            val seconds = text?.toString()?.trim()?.toIntOrNull()
-            if (seconds != null && seconds >= 0) {
-                prefs.screenshotDelaySeconds = seconds
-            }
-        }
-
-        binding.dumpSwitch.isChecked = prefs.dumpEnabled
-        binding.dumpSwitch.setOnCheckedChangeListener { _, isChecked ->
-            prefs.dumpEnabled = isChecked
+        scope.launch {
+            repository.rulesFlow.collect { adapter.submitList(it) }
         }
 
         binding.openSettingsButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
-
-        binding.shareButton.setOnClickListener { shareDump() }
-        binding.clearButton.setOnClickListener { confirmClear() }
+        binding.addRuleButton.setOnClickListener {
+            openRule(Rule(name = getString(R.string.new_rule), packageName = ""))
+        }
         binding.galleryButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -73,7 +62,6 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatus()
-        updateFileInfo()
     }
 
     private fun updateStatus() {
@@ -83,47 +71,30 @@ class MainActivity : AppCompatActivity() {
         ).orEmpty()
         val component = ComponentName(this, DumpService::class.java).flattenToString()
         val isEnabled = enabled.split(':').any { it.equals(component, ignoreCase = true) }
-
         binding.statusText.setText(
             if (isEnabled) R.string.service_enabled else R.string.service_disabled
         )
     }
 
-    private fun updateFileInfo() {
-        val file = writer.getFile()
-        if (file.exists()) {
-            val size = Formatter.formatFileSize(this, file.length())
-            binding.fileInfoText.text = getString(R.string.file_info, file.absolutePath, size)
-        } else {
-            binding.fileInfoText.text = getString(R.string.file_missing, file.absolutePath)
-        }
+    private fun openRule(rule: Rule) {
+        val intent = Intent(this, RuleActivity::class.java)
+            .putExtra(RuleActivity.EXTRA_RULE_JSON, json.encodeToString(rule))
+        startActivity(intent)
     }
 
-    private fun shareDump() {
-        val file = writer.getFile()
-        if (!file.exists()) {
-            Toast.makeText(this, R.string.share_no_file, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent, getString(R.string.share_chooser_title)))
-    }
-
-    private fun confirmClear() {
+    private fun confirmDelete(rule: Rule) {
         AlertDialog.Builder(this)
-            .setTitle(R.string.clear_title)
-            .setMessage(R.string.clear_message)
-            .setPositiveButton(R.string.clear_confirm) { _, _ ->
-                writer.clear()
-                updateFileInfo()
+            .setTitle(R.string.delete_rule_title)
+            .setMessage(R.string.delete_rule_message)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                scope.launch { repository.delete(rule.id) }
             }
-            .setNegativeButton(android.R.string.cancel, null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 }

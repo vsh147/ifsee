@@ -25,6 +25,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".RuleActivity"
+            android:exported="false" />
+
         <service
             android:name=".DumpService"
             android:exported="true"
@@ -40,16 +44,6 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             tools:node="remove" />
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
 
     </application>
 

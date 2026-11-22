@@ -12,117 +12,188 @@ import android.util.Log
 import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.treedumper.model.MatchMode
+import com.example.treedumper.model.MatchOp
+import com.example.treedumper.model.Matcher
+import com.example.treedumper.model.MatcherField
+import com.example.treedumper.model.Rule
+import com.example.treedumper.model.RuleValidator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 class DumpService : AccessibilityService() {
 
-    private lateinit var prefs: Prefs
-    private val writer by lazy { DumpWriter.get(this) }
-    private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
-    private val screenshotHandler = Handler(Looper.getMainLooper())
+    private data class NodeData(val text: String, val description: String, val viewId: String)
+    private data class CompiledMatcher(val matcher: Matcher, val regex: Regex?)
+    private data class CachedRule(val rule: Rule, val matchers: List<CompiledMatcher>)
 
-    private var lastDumpAt = 0L
-    private var lastScreenshotAt = 0L
-    private var screenshotPending = false
-    private var lastHash: Int? = null
+    private lateinit var repository: RulesRepository
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val handler = Handler(Looper.getMainLooper())
+    private val writer by lazy { ScreenshotWriter.get(this) }
+    private val actionExecutors: List<ActionExecutor> by lazy {
+        listOf(ScreenshotActionExecutor { requestScreenshot() })
+    }
+    private val lastFired = mutableMapOf<String, Long>()
+
+    @Volatile
+    var rules: List<Rule> = emptyList()
+        private set
+
+    @Volatile
+    private var cachedRules: List<CachedRule> = emptyList()
 
     override fun onCreate() {
         super.onCreate()
-        prefs = Prefs(this)
+        repository = RulesRepository(this)
+    }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        scope.launch {
+            repository.rulesFlow.collect { loaded ->
+                cachedRules = loaded.map { rule ->
+                    CachedRule(rule, rule.matchers.map { matcher ->
+                        CompiledMatcher(matcher, RuleValidator.compile(matcher))
+                    })
+                }
+                rules = loaded
+            }
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         try {
-            if (!prefs.dumpEnabled) return
+            val packageName = event.packageName?.toString() ?: return
+            val applicable = cachedRules.filter { cached ->
+                cached.rule.enabled && cached.rule.packageName == packageName
+            }
+            if (applicable.isEmpty()) return
 
-            val targetPackage = prefs.targetPackage.trim()
-            if (targetPackage.isEmpty()) return
-            if (event.packageName?.toString() != targetPackage) return
+            val nodes = collectNodes()
+            if (nodes.isEmpty()) return
 
             val now = SystemClock.elapsedRealtime()
-            if (now - lastDumpAt < THROTTLE_MS) return
-            lastDumpAt = now
+            for (cached in applicable) {
+                if (!matches(cached, nodes)) continue
 
-            val roots = collectRoots(targetPackage)
-            if (roots.isEmpty()) return
+                val last = lastFired[cached.rule.id]
+                if (last != null && now - last < cached.rule.cooldownMs) continue
+                lastFired[cached.rule.id] = now
 
-            val filter = prefs.logFilter
-            val tree = StringBuilder()
-            for (root in roots) {
-                try {
-                    tree.append(TreeDumper.dumpTree(root, filter))
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to dump a window", e)
-                }
+                val actions = cached.rule.actions
+                handler.postDelayed({
+                    actionExecutors.forEach { executor ->
+                        actions.forEach { action -> executor.execute(action) }
+                    }
+                }, cached.rule.delayMs.coerceAtLeast(0L))
             }
-            if (tree.isEmpty()) return
-
-            requestScreenshotIfAllowed()
-
-            val text = tree.toString()
-            val hash = text.hashCode()
-            if (hash == lastHash) return
-            lastHash = hash
-
-            val timestamp = timeFormat.format(Date())
-            writer.enqueue(timestamp, eventTypeName(event.eventType), targetPackage, roots.size, text)
         } catch (e: Exception) {
             Log.w(TAG, "Failed to handle accessibility event", e)
         }
     }
 
-    private fun collectRoots(targetPackage: String): List<AccessibilityNodeInfo> {
-        val windows = try {
-            this.windows.orEmpty()
+    private fun collectNodes(): List<NodeData> {
+        val nodes = mutableListOf<NodeData>()
+        val roots = try {
+            windows.orEmpty().mapNotNull { window ->
+                try {
+                    window.root
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to get window root", e)
+                    null
+                }
+            }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to get windows", e)
             emptyList()
         }
-
-        val roots = windows.mapNotNull { window ->
+        val effective = if (roots.isEmpty()) listOfNotNull(rootInActiveWindow) else roots
+        for (root in effective) {
             try {
-                window.root
+                scan(root, 0, nodes)
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to get window root", e)
-                null
-            }
-        }.filter { root ->
-            try {
-                root.packageName?.toString() == targetPackage
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to get root package", e)
-                false
+                Log.w(TAG, "Failed to scan window", e)
             }
         }
+        return nodes
+    }
 
-        if (roots.isNotEmpty()) return roots
+    private fun scan(node: AccessibilityNodeInfo, depth: Int, nodes: MutableList<NodeData>) {
+        if (depth > MAX_DEPTH) return
 
-        return listOfNotNull(rootInActiveWindow).filter { root ->
-            try {
-                root.packageName?.toString() == targetPackage
+        try {
+            nodes.add(
+                NodeData(
+                    text = node.text?.toString().orEmpty(),
+                    description = node.contentDescription?.toString().orEmpty(),
+                    viewId = node.viewIdResourceName.orEmpty()
+                )
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to read node", e)
+            return
+        }
+
+        val childCount = try {
+            node.childCount
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to get child count", e)
+            0
+        }
+
+        for (index in 0 until childCount) {
+            val child = try {
+                node.getChild(index)
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to get active root package", e)
-                false
+                Log.w(TAG, "Failed to get child at $index", e)
+                null
+            } ?: continue
+
+            try {
+                scan(child, depth + 1, nodes)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to scan child at $index", e)
             }
         }
     }
 
-    private fun requestScreenshotIfAllowed() {
+    private fun matches(cached: CachedRule, nodes: List<NodeData>): Boolean {
+        if (cached.matchers.isEmpty()) return false
+
+        val results = cached.matchers.map { compiled ->
+            nodes.any { node -> matches(compiled, node) }
+        }
+        return if (cached.rule.matchMode == MatchMode.ALL) {
+            results.all { it }
+        } else {
+            results.any { it }
+        }
+    }
+
+    private fun matches(compiled: CompiledMatcher, node: NodeData): Boolean {
+        val value = when (compiled.matcher.field) {
+            MatcherField.TEXT -> node.text
+            MatcherField.DESCRIPTION -> node.description
+            MatcherField.VIEW_ID -> node.viewId
+        }
+        return when (compiled.matcher.op) {
+            MatchOp.CONTAINS -> value.contains(compiled.matcher.value)
+            MatchOp.EQUALS -> value == compiled.matcher.value
+            MatchOp.REGEX -> compiled.regex?.containsMatchIn(value) ?: false
+        }
+    }
+
+    private fun requestScreenshot() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return
-        if (screenshotPending) return
-
-        val now = SystemClock.elapsedRealtime()
-        val intervalMs = prefs.screenshotIntervalSeconds * 1000L
-        if (now - lastScreenshotAt < intervalMs) return
-        lastScreenshotAt = now
-        screenshotPending = true
-
-        screenshotHandler.postDelayed({
-            screenshotPending = false
+        try {
             takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, screenshotCallback)
-        }, prefs.screenshotDelaySeconds * 1000L)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to request screenshot", e)
+        }
     }
 
     private val screenshotCallback = object : TakeScreenshotCallback {
@@ -132,9 +203,7 @@ class DumpService : AccessibilityService() {
                 val hardwareBitmap = Bitmap.wrapHardwareBuffer(result.hardwareBuffer, result.colorSpace)
                 copy = hardwareBitmap?.copy(Bitmap.Config.ARGB_8888, false)
                 hardwareBitmap?.recycle()
-                if (copy == null) {
-                    Log.w(TAG, "Failed to copy screenshot hardware buffer")
-                }
+                if (copy == null) Log.w(TAG, "Failed to copy screenshot hardware buffer")
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to copy screenshot hardware buffer", e)
             } finally {
@@ -146,34 +215,30 @@ class DumpService : AccessibilityService() {
                     }
                 }
             }
-            if (copy != null) {
-                writer.enqueueScreenshot(copy)
-            }
+            if (copy != null) writer.enqueue(copy)
         }
 
         override fun onFailure(errorCode: Int) {
-            Log.w(TAG, "Screenshot failed with error $errorCode")
+            if (errorCode == ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT) {
+                Log.w(TAG, "Screenshot rate limited by system")
+            } else {
+                Log.w(TAG, "Screenshot failed with error $errorCode")
+            }
         }
     }
 
-    private fun eventTypeName(eventType: Int): String = when (eventType) {
-        AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> "CONTENT_CHANGED"
-        AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> "STATE_CHANGED"
-        AccessibilityEvent.TYPE_WINDOWS_CHANGED -> "WINDOWS_CHANGED"
-        else -> "UNKNOWN_$eventType"
-    }
-
     override fun onInterrupt() {
-        // Nothing to interrupt: the service only reads the tree.
+        // No actions to interrupt.
     }
 
     override fun onDestroy() {
-        screenshotHandler.removeCallbacksAndMessages(null)
+        handler.removeCallbacksAndMessages(null)
+        scope.cancel()
         super.onDestroy()
     }
 
     private companion object {
-        const val TAG = "DumpService"
-        const val THROTTLE_MS = 500L
+        const val TAG = "RuleService"
+        const val MAX_DEPTH = 40
     }
 }

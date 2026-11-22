@@ -1,31 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">YaPro Tree Dumper</string>
-    <string name="accessibility_description">Сервис только читает дерево элементов экрана приложения Яндекс Про и записывает его в текстовый файл для ручного анализа. Сервис не нажимает кнопки, не совершает жесты и не отправляет данные в сеть.</string>
+    <string name="app_name">Tree Rules</string>
+    <string name="accessibility_description">Сервис по настроенным правилам обнаруживает нужные элементы на экране и сохраняет скриншот в галерею. Другие действия не выполняются.</string>
 
     <string name="service_enabled">Сервис включён</string>
     <string name="service_disabled">Сервис выключен</string>
     <string name="open_settings">Открыть настройки спец. возможностей</string>
-
-    <string name="target_package_label">Целевой пакет</string>
-    <string name="filter_label">Фильтр</string>
-    <string name="filter_hint">Принять</string>
-    <string name="screenshot_interval_label">Интервал скриншота, сек</string>
-    <string name="screenshot_interval_hint">10</string>
-    <string name="screenshot_delay_label">Задержка скриншота, сек</string>
-    <string name="screenshot_delay_hint">3</string>
-    <string name="dump_enabled">Писать дамп</string>
-
-    <string name="file_info">Файл дампа: %1$s (%2$s)</string>
-    <string name="file_missing">Файл дампа пока не создан: %1$s</string>
-    <string name="share">Поделиться файлом</string>
-    <string name="share_chooser_title">Поделиться дампом</string>
-    <string name="share_no_file">Файл дампа ещё не создан</string>
-    <string name="clear">Очистить файл</string>
-    <string name="clear_title">Очистить файл?</string>
-    <string name="clear_message">Будут удалены текущий и предыдущий файлы дампа.</string>
-    <string name="clear_confirm">Очистить</string>
     <string name="open_gallery">Открыть галерею</string>
+    <string name="add_rule">Добавить правило</string>
+    <string name="hint">Правила применяются сразу после сохранения, перезапуск сервиса не требуется.</string>
 
-    <string name="hint">Как включить: нажмите кнопку настроек, найдите «YaPro Tree Dumper» и включите сервис, затем включите переключатель «Писать дамп» и откройте Яндекс Про.\nКак забрать файл: adb pull /sdcard/Android/data/com.example.treedumper/files/tree_dump.txt &lt;папка&gt; или кнопка «Поделиться файлом».</string>
+    <string name="rule_name">Имя правила</string>
+    <string name="rule_package">Приложение</string>
+    <string name="rule_matchers">Условия</string>
+    <string name="add_matcher">Добавить условие</string>
+    <string name="match_mode">Режим</string>
+    <string name="cooldown_ms">Интервал срабатывания, мс</string>
+    <string name="delay_ms">Задержка перед действием, мс</string>
+    <string name="actions">Действия</string>
+    <string name="action_screenshot">Скриншот</string>
+    <string name="save">Сохранить</string>
+    <string name="new_rule">Новое правило</string>
+    <string name="delete_rule_title">Удалить правило?</string>
+    <string name="delete_rule_message">Правило будет удалено без возможности восстановления.</string>
+    <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+    <string name="menu_more">⋮</string>
+    <string name="remove_short">×</string>
+
+    <string name="error_empty_name">Введите имя правила</string>
+    <string name="error_empty_package">Выберите приложение</string>
+    <string name="error_no_matchers">Добавьте хотя бы одно условие</string>
+    <string name="error_empty_value">Значение условия не может быть пустым</string>
+    <string name="error_bad_regex">Некорректное регулярное выражение</string>
+    <string name="error_negative_delay">Задержки не могут быть отрицательными</string>
+    <string name="error_no_actions">Выберите хотя бы одно действие</string>
+
+    <string name="field_text">Текст</string>
+    <string name="field_description">Описание</string>
+    <string name="field_view_id">ID</string>
+    <string name="op_contains">Содержит</string>
+    <string name="op_equals">Равно</string>
+    <string name="op_regex">Регулярка</string>
+    <string name="mode_all">Все (И)</string>
+    <string name="mode_any">Любое (ИЛИ)</string>
+
+    <string-array name="match_modes">
+        <item>@string/mode_all</item>
+        <item>@string/mode_any</item>
+    </string-array>
+    <string-array name="matcher_fields">
+        <item>@string/field_text</item>
+        <item>@string/field_description</item>
+        <item>@string/field_view_id</item>
+    </string-array>
+    <string-array name="match_ops">
+        <item>@string/op_contains</item>
+        <item>@string/op_equals</item>
+        <item>@string/op_regex</item>
+    </string-array>
 </resources>
