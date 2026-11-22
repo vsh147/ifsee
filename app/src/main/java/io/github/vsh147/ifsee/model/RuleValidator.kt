@@ -1,6 +1,6 @@
-package io.github.vsh.ifsee.model
+package io.github.vsh147.ifsee.model
 
-import io.github.vsh.ifsee.R
+import io.github.vsh147.ifsee.R
 
 enum class RuleValidationError(val messageRes: Int) {
     EMPTY_NAME(R.string.error_empty_name),

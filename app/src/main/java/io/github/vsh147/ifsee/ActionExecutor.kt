@@ -1,6 +1,6 @@
-package io.github.vsh.ifsee
+package io.github.vsh147.ifsee
 
-import io.github.vsh.ifsee.model.RuleAction
+import io.github.vsh147.ifsee.model.RuleAction
 
 interface ActionExecutor {
     fun execute(action: RuleAction)

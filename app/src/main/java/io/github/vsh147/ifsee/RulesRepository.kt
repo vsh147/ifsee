@@ -1,4 +1,4 @@
-package io.github.vsh.ifsee
+package io.github.vsh147.ifsee
 
 import android.content.Context
 import android.util.Log
@@ -6,10 +6,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import io.github.vsh.ifsee.model.Rule
-import io.github.vsh.ifsee.model.RuleValidator
-import io.github.vsh.ifsee.model.RulesFile
-import io.github.vsh.ifsee.model.RulesJson
+import io.github.vsh147.ifsee.model.Rule
+import io.github.vsh147.ifsee.model.RuleValidator
+import io.github.vsh147.ifsee.model.RulesFile
+import io.github.vsh147.ifsee.model.RulesJson
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map

@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "io.github.vsh.ifsee"
+    namespace = "io.github.vsh147.ifsee"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.vsh.ifsee"
+        applicationId = "io.github.vsh147.ifsee"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

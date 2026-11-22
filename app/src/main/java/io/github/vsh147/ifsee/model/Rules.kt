@@ -1,4 +1,4 @@
-package io.github.vsh.ifsee.model
+package io.github.vsh147.ifsee.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

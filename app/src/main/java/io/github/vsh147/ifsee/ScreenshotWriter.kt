@@ -1,4 +1,4 @@
-package io.github.vsh.ifsee
+package io.github.vsh147.ifsee
 
 import android.content.ContentValues
 import android.content.Context

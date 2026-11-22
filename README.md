@@ -32,7 +32,7 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Приложение устанавливается отдельно с applicationId `io.github.vsh.ifsee`;
+Приложение устанавливается отдельно с applicationId `io.github.vsh147.ifsee`;
 удалять старую версию не обязательно.
 
 1. Откройте приложение и нажмите «Открыть настройки спец. возможностей».
