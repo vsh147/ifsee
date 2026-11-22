@@ -12,6 +12,10 @@
 
     <string name="rule_name">Имя правила</string>
     <string name="rule_package">Приложение</string>
+    <string name="rule_package_manual">Пакет (вручную)</string>
+    <string name="select_app">Нажмите, чтобы выбрать приложение</string>
+    <string name="search_app">Поиск приложения</string>
+    <string name="app_icon">Иконка приложения</string>
     <string name="rule_matchers">Условия</string>
     <string name="add_matcher">Добавить условие</string>
     <string name="match_mode">Режим</string>

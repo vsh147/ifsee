@@ -24,10 +24,52 @@
             android:text="@string/rule_package"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
+        <LinearLayout
+            android:id="@+id/selectedAppRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/selectedAppIcon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="@string/app_icon"
+                android:scaleType="fitCenter" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/selectedAppName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_app"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+                <TextView
+                    android:id="@+id/selectedAppPackage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
         <AutoCompleteTextView
             android:id="@+id/packageEdit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/rule_package_manual"
             android:imeOptions="actionDone"
             android:inputType="text"
             android:singleLine="true" />

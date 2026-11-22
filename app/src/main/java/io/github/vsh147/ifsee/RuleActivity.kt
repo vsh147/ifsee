@@ -1,9 +1,12 @@
 package io.github.vsh147.ifsee
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import io.github.vsh147.ifsee.databinding.ActivityRuleBinding
 import io.github.vsh147.ifsee.databinding.ItemMatcherBinding
 import io.github.vsh147.ifsee.model.MatchMode
@@ -29,7 +32,20 @@ class RuleActivity : AppCompatActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val json = RulesJson.json
     private val matcherBindings = mutableListOf<ItemMatcherBinding>()
-    private val packageNames = mutableMapOf<String, String>()
+    private var selectedApp: AppInfo? = null
+
+    private val appPickerLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != RESULT_OK) return@registerForActivityResult
+            val packageName = result.data?.getStringExtra(AppPickerActivity.EXTRA_PACKAGE)
+                ?: return@registerForActivityResult
+            val label = result.data?.getStringExtra(AppPickerActivity.EXTRA_LABEL)
+                ?.takeIf { it.isNotBlank() }
+                ?: packageName
+            selectedApp = AppInfo(label, packageName)
+            binding.packageEdit.setText(packageName)
+            renderSelectedApp()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +62,7 @@ class RuleActivity : AppCompatActivity() {
         repository = RulesRepository(this)
 
         binding.nameEdit.setText(rule.name)
-        setupPackages()
+        setupAppSelection()
         binding.modeSpinner.setSelection(if (rule.matchMode == MatchMode.ALL) 0 else 1)
         rule.matchers.forEach { addMatcher(it) }
         binding.cooldownEdit.setText(rule.cooldownMs.toString())
@@ -57,21 +73,52 @@ class RuleActivity : AppCompatActivity() {
         binding.saveButton.setOnClickListener { save() }
     }
 
-    private fun setupPackages() {
-        val entries = packageManager.getInstalledApplications(0).mapNotNull { app ->
-            if (packageManager.getLaunchIntentForPackage(app.packageName) == null) return@mapNotNull null
-            val label = packageManager.getApplicationLabel(app).toString()
-            val display = "$label (${app.packageName})"
-            packageNames[display] = app.packageName
-            display
-        }.sorted()
+    private fun setupAppSelection() {
+        binding.packageEdit.setText(rule.packageName)
+        binding.selectedAppRow.setOnClickListener {
+            appPickerLauncher.launch(Intent(this, AppPickerActivity::class.java))
+        }
+        binding.packageEdit.addTextChangedListener { text ->
+            val packageName = text?.toString()?.trim().orEmpty()
+            if (selectedApp != null && packageName != selectedApp?.packageName) {
+                selectedApp = null
+                renderSelectedApp()
+            }
+        }
+        loadSelectedApp(rule.packageName)
+    }
 
-        binding.packageEdit.setAdapter(
-            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, entries)
-        )
-        binding.packageEdit.setText(
-            packageNames.entries.firstOrNull { it.value == rule.packageName }?.key ?: rule.packageName
-        )
+    private fun loadSelectedApp(packageName: String) {
+        selectedApp = null
+        renderSelectedApp()
+        if (packageName.isBlank()) return
+        scope.launch {
+            val app = AppCatalog.findApp(this@RuleActivity, packageName)
+            if (binding.packageEdit.text?.toString()?.trim() == packageName) {
+                selectedApp = app
+                renderSelectedApp()
+            }
+        }
+    }
+
+    private fun renderSelectedApp() {
+        val app = selectedApp
+        if (app == null) {
+            binding.selectedAppIcon.setImageDrawable(null)
+            binding.selectedAppName.setText(R.string.select_app)
+            binding.selectedAppPackage.text = ""
+            return
+        }
+
+        binding.selectedAppName.text = app.label
+        binding.selectedAppPackage.text = app.packageName
+        binding.selectedAppIcon.setImageDrawable(AppCatalog.cachedIcon(app.packageName))
+        scope.launch {
+            val icon = AppCatalog.loadIcon(this@RuleActivity, app.packageName)
+            if (selectedApp?.packageName == app.packageName) {
+                binding.selectedAppIcon.setImageDrawable(icon)
+            }
+        }
     }
 
     private fun addMatcher(matcher: Matcher?) {
@@ -99,7 +146,7 @@ class RuleActivity : AppCompatActivity() {
         val enteredPackage = binding.packageEdit.text?.toString()?.trim().orEmpty()
         val updated = rule.copy(
             name = binding.nameEdit.text?.toString()?.trim().orEmpty(),
-            packageName = packageNames[enteredPackage] ?: enteredPackage,
+            packageName = enteredPackage,
             matchers = collectMatchers(),
             matchMode = if (binding.modeSpinner.selectedItemPosition == 0) MatchMode.ALL else MatchMode.ANY,
             cooldownMs = binding.cooldownEdit.text?.toString()?.trim()?.toLongOrNull() ?: 3000L,
