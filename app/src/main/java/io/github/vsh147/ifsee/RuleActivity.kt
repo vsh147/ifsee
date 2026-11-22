@@ -2,6 +2,7 @@ package io.github.vsh147.ifsee
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,7 +64,7 @@ class RuleActivity : AppCompatActivity() {
 
         binding.nameEdit.setText(rule.name)
         setupAppSelection()
-        binding.modeSpinner.setSelection(if (rule.matchMode == MatchMode.ALL) 0 else 1)
+        setupMatchMode()
         rule.matchers.forEach { addMatcher(it) }
         binding.cooldownEdit.setText(rule.cooldownMs.toString())
         binding.delayEdit.setText(rule.delayMs.toString())
@@ -86,6 +87,29 @@ class RuleActivity : AppCompatActivity() {
             }
         }
         loadSelectedApp(rule.packageName)
+    }
+
+    private fun setupMatchMode() {
+        binding.matchModeToggle.check(
+            if (rule.matchMode == MatchMode.ALL) R.id.modeAllButton else R.id.modeAnyButton
+        )
+        binding.matchModeToggle.addOnButtonCheckedListener { _, _, isChecked ->
+            if (isChecked) updateMatchModeExplanation()
+        }
+        updateMatchModeUi()
+    }
+
+    private fun updateMatchModeUi() {
+        binding.matchModeContainer.visibility =
+            if (matcherBindings.size >= 2) View.VISIBLE else View.GONE
+        updateMatchModeExplanation()
+    }
+
+    private fun updateMatchModeExplanation() {
+        val all = binding.matchModeToggle.checkedButtonId == R.id.modeAllButton
+        binding.matchModeExplanation.setText(
+            if (all) R.string.match_mode_all_hint else R.string.match_mode_any_hint
+        )
     }
 
     private fun loadSelectedApp(packageName: String) {
@@ -129,9 +153,11 @@ class RuleActivity : AppCompatActivity() {
         itemBinding.removeButton.setOnClickListener {
             binding.matchersContainer.removeView(itemBinding.root)
             matcherBindings.remove(itemBinding)
+            updateMatchModeUi()
         }
         matcherBindings.add(itemBinding)
         binding.matchersContainer.addView(itemBinding.root)
+        updateMatchModeUi()
     }
 
     private fun collectMatchers(): List<Matcher> = matcherBindings.map { item ->
@@ -148,7 +174,11 @@ class RuleActivity : AppCompatActivity() {
             name = binding.nameEdit.text?.toString()?.trim().orEmpty(),
             packageName = enteredPackage,
             matchers = collectMatchers(),
-            matchMode = if (binding.modeSpinner.selectedItemPosition == 0) MatchMode.ALL else MatchMode.ANY,
+            matchMode = if (binding.matchModeToggle.checkedButtonId == R.id.modeAllButton) {
+                MatchMode.ALL
+            } else {
+                MatchMode.ANY
+            },
             cooldownMs = binding.cooldownEdit.text?.toString()?.trim()?.toLongOrNull() ?: 3000L,
             delayMs = binding.delayEdit.text?.toString()?.trim()?.toLongOrNull() ?: 0L,
             actions = if (binding.screenshotCheckBox.isChecked) {
