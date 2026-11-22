@@ -1,6 +1,6 @@
-package com.example.treedumper.model
+package io.github.vsh.ifsee.model
 
-import com.example.treedumper.R
+import io.github.vsh.ifsee.R
 
 enum class RuleValidationError(val messageRes: Int) {
     EMPTY_NAME(R.string.error_empty_name),

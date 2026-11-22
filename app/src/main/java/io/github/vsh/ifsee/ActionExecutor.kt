@@ -1,6 +1,6 @@
-package com.example.treedumper
+package io.github.vsh.ifsee
 
-import com.example.treedumper.model.RuleAction
+import io.github.vsh.ifsee.model.RuleAction
 
 interface ActionExecutor {
     fun execute(action: RuleAction)

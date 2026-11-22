@@ -1,4 +1,4 @@
-package com.example.treedumper
+package io.github.vsh.ifsee
 
 import android.content.ContentValues
 import android.content.Context
@@ -14,7 +14,6 @@ import java.util.concurrent.Executors
 class ScreenshotWriter private constructor(context: Context) {
 
     private val appContext = context.applicationContext
-    private val album = appContext.getString(R.string.app_name)
     private val executor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, THREAD_NAME) }
     private val timeFormat = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US)
 
@@ -24,7 +23,7 @@ class ScreenshotWriter private constructor(context: Context) {
                 val values = ContentValues().apply {
                     put(MediaStore.Images.Media.DISPLAY_NAME, "shot_" + timeFormat.format(Date()) + ".jpg")
                     put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$album")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM")
                     put(MediaStore.Images.Media.IS_PENDING, 1)
                 }
                 val uri = appContext.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
@@ -64,6 +63,7 @@ class ScreenshotWriter private constructor(context: Context) {
     companion object {
         private const val TAG = "ScreenshotWriter"
         private const val THREAD_NAME = "screenshot-writer"
+        private const val ALBUM = "Ifsee"
 
         @Volatile
         private var instance: ScreenshotWriter? = null

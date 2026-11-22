@@ -1,4 +1,4 @@
-package com.example.treedumper.model
+package io.github.vsh.ifsee.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

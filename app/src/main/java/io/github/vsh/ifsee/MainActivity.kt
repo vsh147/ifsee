@@ -1,4 +1,4 @@
-package com.example.treedumper
+package io.github.vsh.ifsee
 
 import android.content.ComponentName
 import android.content.Intent
@@ -8,9 +8,9 @@ import android.provider.Settings
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.treedumper.databinding.ActivityMainBinding
-import com.example.treedumper.model.Rule
-import com.example.treedumper.model.RulesJson
+import io.github.vsh.ifsee.databinding.ActivityMainBinding
+import io.github.vsh.ifsee.model.Rule
+import io.github.vsh.ifsee.model.RulesJson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

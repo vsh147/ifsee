@@ -1,4 +1,4 @@
-package com.example.treedumper
+package io.github.vsh.ifsee
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityService.ScreenshotResult
@@ -12,12 +12,12 @@ import android.util.Log
 import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import com.example.treedumper.model.MatchMode
-import com.example.treedumper.model.MatchOp
-import com.example.treedumper.model.Matcher
-import com.example.treedumper.model.MatcherField
-import com.example.treedumper.model.Rule
-import com.example.treedumper.model.RuleValidator
+import io.github.vsh.ifsee.model.MatchMode
+import io.github.vsh.ifsee.model.MatchOp
+import io.github.vsh.ifsee.model.Matcher
+import io.github.vsh.ifsee.model.MatcherField
+import io.github.vsh.ifsee.model.Rule
+import io.github.vsh.ifsee.model.RuleValidator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

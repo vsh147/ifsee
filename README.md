@@ -1,6 +1,6 @@
-# Tree Rules
+# Ifsee
 
-Android-приложение на Kotlin: по настраиваемым правилам обнаруживает нужные
+Android-приложение Ifsee на Kotlin: по настраиваемым правилам обнаруживает нужные
 элементы на экране и сохраняет скриншот в галерею. Другие действия не
 выполняются; кликов, жестов и сетевых запросов нет.
 
@@ -32,8 +32,11 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Приложение устанавливается отдельно с applicationId `io.github.vsh.ifsee`;
+удалять старую версию не обязательно.
+
 1. Откройте приложение и нажмите «Открыть настройки спец. возможностей».
-2. Включите сервис **Tree Rules**.
+2. Включите сервис **Ifsee**.
 3. Вернитесь и нажмите «Добавить правило».
 4. Укажите имя, приложение, условия, режим И/ИЛИ, интервал, задержку и действие
    «Скриншот», затем нажмите «Сохранить».
@@ -43,12 +46,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Скриншоты
 
-Скриншоты сохраняются через `MediaStore.Images` в `Pictures/Tree Rules` как
+Скриншоты сохраняются через `MediaStore.Images` в `Pictures/Ifsee` как
 `shot_yyyyMMdd_HHmmss_SSS.jpg` (JPEG, качество 90). Открыть альбом можно кнопкой
 «Открыть галерею». Скопировать на компьютер:
 
 ```bash
-adb pull "/sdcard/Pictures/Tree Rules/" .
+adb pull "/sdcard/Pictures/Ifsee/" .
 ```
 
 На Android 13 и ниже API `takeScreenshot` недоступен — скриншоты не создаются.

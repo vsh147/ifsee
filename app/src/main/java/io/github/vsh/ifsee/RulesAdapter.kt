@@ -1,4 +1,4 @@
-package com.example.treedumper
+package io.github.vsh.ifsee
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -6,8 +6,8 @@ import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.treedumper.databinding.ItemRuleBinding
-import com.example.treedumper.model.Rule
+import io.github.vsh.ifsee.databinding.ItemRuleBinding
+import io.github.vsh.ifsee.model.Rule
 
 class RulesAdapter(
     private val onEnabledChange: (Rule, Boolean) -> Unit,

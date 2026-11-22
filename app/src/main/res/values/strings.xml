@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Tree Rules</string>
-    <string name="accessibility_description">Сервис по настроенным правилам обнаруживает нужные элементы на экране и сохраняет скриншот в галерею. Другие действия не выполняются.</string>
+    <string name="app_name">Ifsee</string>
+    <string name="accessibility_description">Сервис Ifsee по настроенным правилам обнаруживает нужные элементы на экране и сохраняет скриншот в галерею. Другие действия не выполняются.</string>
 
     <string name="service_enabled">Сервис включён</string>
     <string name="service_disabled">Сервис выключен</string>

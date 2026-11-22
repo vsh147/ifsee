@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.treedumper"
+    namespace = "io.github.vsh.ifsee"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.treedumper"
+        applicationId = "io.github.vsh.ifsee"
         minSdk = 30
         targetSdk = 35
         versionCode = 1

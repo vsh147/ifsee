@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "YaPro"
+rootProject.name = "Ifsee"
 include(":app")
