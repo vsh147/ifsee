@@ -25,8 +25,11 @@
     <string name="match_mode">Условия должны совпасть</string>
     <string name="match_mode_all_hint">Правило сработает, когда совпадут все условия</string>
     <string name="match_mode_any_hint">Правило сработает, когда совпадёт хотя бы одно условие</string>
-    <string name="cooldown_ms">Интервал срабатывания, мс</string>
-    <string name="delay_ms">Задержка перед действием, мс</string>
+    <string name="cooldown_ms">Интервал срабатывания</string>
+    <string name="cooldown_helper">Минимальная пауза между срабатываниями этого правила</string>
+    <string name="delay_ms">Задержка перед действием</string>
+    <string name="delay_helper">Пауза между срабатыванием и скриншотом</string>
+    <string name="ms_suffix">мс</string>
     <string name="actions">Действия</string>
     <string name="action_screenshot">Скриншот</string>
     <string name="save">Сохранить</string>
