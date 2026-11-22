@@ -17,6 +17,10 @@
     <string name="search_app">Поиск приложения</string>
     <string name="app_icon">Иконка приложения</string>
     <string name="rule_matchers">Условия</string>
+    <string name="matcher_field">Поле</string>
+    <string name="matcher_op">Оператор</string>
+    <string name="matcher_value">Значение</string>
+    <string name="remove_matcher">Удалить условие</string>
     <string name="add_matcher">Добавить условие</string>
     <string name="match_mode">Условия должны совпасть</string>
     <string name="match_mode_all_hint">Правило сработает, когда совпадут все условия</string>
@@ -44,10 +48,10 @@
 
     <string name="field_text">Текст</string>
     <string name="field_description">Описание</string>
-    <string name="field_view_id">ID</string>
+    <string name="field_view_id">ID элемента</string>
     <string name="op_contains">Содержит</string>
     <string name="op_equals">Равно</string>
-    <string name="op_regex">Регулярка</string>
+    <string name="op_regex">Regex</string>
     <string name="mode_all">Все (И)</string>
     <string name="mode_any">Любое (ИЛИ)</string>
 

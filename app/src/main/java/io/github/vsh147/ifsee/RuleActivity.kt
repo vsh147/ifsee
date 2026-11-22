@@ -147,8 +147,12 @@ class RuleActivity : AppCompatActivity() {
 
     private fun addMatcher(matcher: Matcher?) {
         val itemBinding = ItemMatcherBinding.inflate(layoutInflater, binding.matchersContainer, false)
-        itemBinding.fieldSpinner.setSelection(matcher?.field?.ordinal ?: 0)
-        itemBinding.opSpinner.setSelection(matcher?.op?.ordinal ?: 0)
+        val fields = resources.getStringArray(R.array.matcher_fields)
+        val ops = resources.getStringArray(R.array.match_ops)
+        itemBinding.fieldDropDown.setSimpleItems(R.array.matcher_fields)
+        itemBinding.opDropDown.setSimpleItems(R.array.match_ops)
+        itemBinding.fieldDropDown.setText(fields[matcher?.field?.ordinal ?: 0], false)
+        itemBinding.opDropDown.setText(ops[matcher?.op?.ordinal ?: 0], false)
         itemBinding.valueEdit.setText(matcher?.value.orEmpty())
         itemBinding.removeButton.setOnClickListener {
             binding.matchersContainer.removeView(itemBinding.root)
@@ -161,11 +165,18 @@ class RuleActivity : AppCompatActivity() {
     }
 
     private fun collectMatchers(): List<Matcher> = matcherBindings.map { item ->
+        val fields = resources.getStringArray(R.array.matcher_fields)
+        val ops = resources.getStringArray(R.array.match_ops)
         Matcher(
-            field = MatcherField.entries[item.fieldSpinner.selectedItemPosition],
-            op = MatchOp.entries[item.opSpinner.selectedItemPosition],
+            field = MatcherField.entries[itemIndex(item.fieldDropDown.text?.toString(), fields)],
+            op = MatchOp.entries[itemIndex(item.opDropDown.text?.toString(), ops)],
             value = item.valueEdit.text?.toString().orEmpty()
         )
+    }
+
+    private fun itemIndex(value: String?, values: Array<String>): Int {
+        val index = values.indexOf(value)
+        return if (index >= 0) index else 0
     }
 
     private fun save() {
