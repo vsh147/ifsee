@@ -26,6 +26,26 @@ Android-приложение Ifsee на Kotlin: по настраиваемым 
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
+## Релизы
+
+Версия задаётся тегом вида `vX.Y.Z`, например:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Workflow `.github/workflows/release.yml` соберёт подписанный release APK и
+создаст GitHub Release с файлами `Ifsee-0.1.0.apk` и `Ifsee-0.1.0.apk.sha256`.
+Теги `v0.*` публикуются как pre-release. Для сборки нужны секреты
+`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
+
+Проверить контрольную сумму:
+
+```bash
+sha256sum -c Ifsee-0.1.0.apk.sha256
+```
+
 ## Установка и включение
 
 ```bash
